@@ -154,7 +154,17 @@ mlx-yue generate examples/quickstart.json \
   --output outputs/quickstart
 ```
 
-#### B. Generate a Full Song
+#### B. Generate Music Conditioned on a Custom Style/Artist LoRA
+```bash
+mlx-yue generate examples/full-song.json \
+  --output outputs/lora-song \
+  --lora path/to/style_lora.safetensors \
+  --lora-scale 1.0 \
+  --precision bf16 \
+  --offline
+```
+
+#### C. Generate a Full Song
 ```bash
 mlx-yue generate examples/full-song.json \
   --model models/converted \
@@ -187,7 +197,7 @@ mlx-yue realaudio reconstruct path/to/song.mp3 --output outputs/realaudio_rec --
 mlx-yue realaudio compare path/to/song.mp3 --output outputs/realaudio_cmp
 ```
 
-#### C. Music Transcription (Audio to Sheet / MIDI)
+#### D. Music Transcription (Audio to Sheet / MIDI)
 ```bash
 mlx-yue transcribe input_song.wav \
   --output outputs/transcription \

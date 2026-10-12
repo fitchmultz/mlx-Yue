@@ -17,13 +17,16 @@ def _pipeline(args, generation_config=None):
     from .pipeline import YuE2Pipeline
     from .conversion import MODEL_REPO, VAE_REPO
 
-    return YuE2Pipeline.from_pretrained(
+    pipe = YuE2Pipeline.from_pretrained(
         args.model or MODEL_REPO, vae=args.vae or VAE_REPO,
         converted_dir=args.converted_dir, precision=args.precision,
         local_files_only=args.offline, memory_budget_gib=args.memory_budget_gib,
         vae_core_frames=args.vae_core_frames, progress=not args.quiet,
         generation_config=generation_config, require_ac=args.require_ac,
     )
+    if getattr(args, "lora", None):
+        pipe.load_lora(args.lora, scale=getattr(args, "lora_scale", 1.0))
+    return pipe
 
 
 def _request(args):
@@ -149,6 +152,8 @@ def parser():
         command.add_argument("--vae-core-frames", type=int, default=256)
         command.add_argument("--require-ac", action="store_true")
         command.add_argument("--resume", action="store_true", help="Verify and reuse a completed song")
+        command.add_argument("--lora", type=Path, help="Path to custom safetensors LoRA adapter file")
+        command.add_argument("--lora-scale", type=float, default=1.0, help="Scale factor for custom LoRA (default: 1.0)")
         if name in {"generate", "plan", "cover"}:
             command.add_argument("--request", dest="request_file")
             command.add_argument("--abc", "--abc-file", help="Supplied ABC file; bytes are preserved")

@@ -135,6 +135,10 @@ class YuE2Pipeline(ReferencePipeline):
         self.vae_core_frames, self.query_chunk_size = vae_core_frames, query_chunk_size
         self.generation_config = generation_config or GenerationConfig()
         self.offload_ar = False
+        self.lora_path: Path | None = None
+        self.lora_scale: float = 1.0
+        self._nar_lora_adapter = None
+        self._ar_lora_adapter = None
         with self._status("Verifying model files"):
             self.conversion = verify_conversion(self.model_dir)
             if not (self.model_dir / f"ar-{precision}.safetensors").is_file():
@@ -317,6 +321,8 @@ class YuE2Pipeline(ReferencePipeline):
                 with self._status("Loading acoustic model"):
                     self._nar = load_nar(self.model_dir, self._bf16_ar, verify=False)
                     mx.eval(self._nar.parameters())
+                    if self._nar_lora_adapter is not None:
+                        self._nar_lora_adapter.apply(self._nar, scale=self.lora_scale)
                 self._record_load("nar", time.perf_counter() - start)
                 self._check_execution()
             self._check_execution()
@@ -339,10 +345,40 @@ class YuE2Pipeline(ReferencePipeline):
                 with self._status(f"Loading {self.precision} AR model"):
                     self._ar = load_ar(self.model_dir, precision=self.precision, verify=False)
                     mx.eval(self._ar.parameters())
+                    if self._ar_lora_adapter is not None and self.precision == "bf16":
+                        self._ar_lora_adapter.apply(self._ar, scale=self.lora_scale)
                 self._record_load("ar", time.perf_counter() - start)
                 self._check_execution()
         self._check_execution()
         return self._ar
+
+    def load_lora(self, lora_path: Path | str, scale: float = 1.0):
+        """Load and prepare an external safetensors or checkpoint LoRA for AR and NAR."""
+        path = Path(lora_path)
+        if not path.is_file():
+            raise FileNotFoundError(f"LoRA file not found: {path}")
+        self.lora_path = path
+        self.lora_scale = float(scale)
+        from .realaudio.adapter import NARLoRAAdapter, ARLoRAAdapter
+        try:
+            nar_ad = NARLoRAAdapter.from_safetensors(path)
+            if nar_ad.lora_weights or nar_ad.io_weights:
+                self._nar_lora_adapter = nar_ad
+                if self._nar is not None:
+                    self._nar_lora_adapter.apply(self._nar, scale=self.lora_scale)
+        except Exception:
+            pass
+        try:
+            ar_ad = ARLoRAAdapter.from_file(path)
+            if ar_ad.lora_weights:
+                self._ar_lora_adapter = ar_ad
+                if self._ar is not None and self.precision == "bf16":
+                    self._ar_lora_adapter.apply(self._ar, scale=self.lora_scale)
+                if self._bf16_ar is not None and self._bf16_ar is not self._ar:
+                    self._ar_lora_adapter.apply(self._bf16_ar, scale=self.lora_scale)
+        except Exception:
+            pass
+        return self
 
     def _generate(self, prefix, sampling, seed, phase, **kwargs):
         from .ar import generate_tokens

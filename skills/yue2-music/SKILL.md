@@ -21,6 +21,9 @@ Use local **mlx-Yue** to turn a musical brief into a reproducible song.
    Real-audio tokenization & reconstruction: use RealAudio v4 (`scripts/realaudio_tool.py`
    or `mlx-yue realaudio`) to encode real recordings into 25Hz semantic tokens and
    reconstruct via NAR LoRA adapter and VAE.
+Custom style/artist LoRAs: attach any community safetensors LoRA file during generation via
+`--lora <path>` and `--lora-scale <float>` (e.g., J-Pop, 1960s Folk Troubadour). Supports ComfyUI,
+AI-Toolkit, merged QKV/GateUp projections, and NAR/AR joint weights.
 4. Use [generation and covers](references/generation-and-covers.md) and
    `scripts/generate_music.py`. Default **standard = AR bf16 + 32 midpoint steps**;
    quick audition **fast = AR bf16 + 8 steps**; BF16 baseline **reference**.
