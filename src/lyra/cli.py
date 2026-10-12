@@ -47,6 +47,17 @@ def _request(args):
         request["abc"] = (base / request.pop("abc_path")).read_bytes().decode("utf-8")
     if args.mode is not None:
         request["cot"] = args.mode
+    if getattr(args, "instrumental", False) or request.get("instrumental", False):
+        request["instrumental"] = True
+        if request.get("lyrics") is None and not getattr(args, "lyrics_file", None) and getattr(args, "lyrics", None) is None:
+            request["lyrics"] = ""
+        style = request.get("style", "Instrumental music")
+        if "instrumental" not in style.lower():
+            style = "Instrumental, " + style.lstrip("., ")
+        for cue in ("no vocals", "no singing"):
+            if cue not in style.lower():
+                style = style.rstrip("., ") + f", {cue}"
+        request["style"] = style.rstrip("., ") + "."
     return request
 
 
@@ -99,11 +110,12 @@ def parser():
     for name, help_text in (("music", "Agent generation/planning helper"),
                             ("abc", "Inspect, compare or strip chords from ABC"),
                             ("listen", "Build a local listening comparison page"),
-                            ("transcribe", "Transcribe source audio with SheetSage2")):
+                            ("transcribe", "Transcribe source audio with SheetSage2"),
+                            ("realaudio", "Real-audio tokenization, LoRA reconstruction and step comparisons")):
         commands.add_parser(name, help=help_text, add_help=False).add_argument("arguments", nargs=argparse.REMAINDER)
     prep = commands.add_parser("prepare", help="Fetch pinned checkpoints and convert the generator")
     prep.add_argument("--source")
-    prep.add_argument("--output", default="models/converted")
+    prep.add_argument("--output", default="models/mlx-Yue2-3B")
     prep.add_argument("--precision", choices=("bf16", "8bit", "4bit"), default="bf16")
     prep.add_argument("--offline", action="store_true")
     prep.add_argument("--cache-dir")
@@ -129,7 +141,7 @@ def parser():
         command.add_argument("--output", required=True, type=Path)
         command.add_argument("--model", help="Converted directory or pinned source checkpoint")
         command.add_argument("--vae", help="Local default VAE checkpoint directory")
-        command.add_argument("--converted-dir", default="models/converted")
+        command.add_argument("--converted-dir", default="models/mlx-Yue2-3B")
         command.add_argument("--precision", choices=("bf16", "8bit", "4bit"), default="bf16")
         command.add_argument("--offline", action="store_true")
         command.add_argument("--quiet", action="store_true")
@@ -148,6 +160,7 @@ def parser():
             command.add_argument("--seed", type=int)
             command.add_argument("--cfg-scale", type=float)
             command.add_argument("--id")
+            command.add_argument("--instrumental", action="store_true", help="Generate, plan, or cover instrumental music without vocal lead")
         if name == "replay":
             command.add_argument("--stage", choices=("synthesize", "decode"), default="decode")
     return parser
@@ -155,7 +168,7 @@ def parser():
 
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
-    helpers = {"music": "run_yue2", "abc": "abc_tools", "listen": "listen", "transcribe": "transcribe"}
+    helpers = {"music": "run_yue2", "abc": "abc_tools", "listen": "listen", "transcribe": "transcribe", "realaudio": "realaudio"}
     if argv and argv[0] in helpers:
         import importlib
         module = importlib.import_module(".music_tools." + helpers[argv[0]], __package__)

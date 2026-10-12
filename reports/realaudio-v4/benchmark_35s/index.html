@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>RealAudio Tokenizer v4 MLX Comparison</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #f8fafc; padding: 2rem; }
+        h1 { color: #38bdf8; font-size: 1.8rem; margin-bottom: 0.5rem; }
+        .meta { background: #1e293b; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.95rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; }
+        .card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 1.25rem; }
+        .card h3 { margin-top: 0; color: #f1f5f9; }
+        .badge { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: bold; margin-bottom: 0.75rem; }
+        .badge-stock { background: #475569; color: #f8fafc; }
+        .badge-adapted { background: #0284c7; color: #f8fafc; }
+        .badge-fast { background: #16a34a; color: #f8fafc; }
+        audio { width: 100%; margin-top: 1rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
+        th, td { padding: 0.5rem; text-align: left; border-bottom: 1px solid #334155; }
+        th { color: #94a3b8; }
+    </style>
+</head>
+<body>
+    <h1>RealAudio Tokenizer v4 - MLX 试听对比</h1>
+    <div class="meta">
+        <p><strong>输入音频:</strong> reports/realaudio-v4/samples/sample_35s.flac (35.00s, 875 tokens)</p>
+        <p><strong>测试环境:</strong> Apple Silicon (MLX Native) | 相同固定噪声 PCG64</p>
+    </div>
+    <div class="grid">
+
+        <div class="card">
+            <span class="badge badge-stock">Stock_NAR_32step</span>
+            <h3>Stock_NAR_32step</h3>
+            <table>
+                <tr><th>求解步数</th><td>32 步</td></tr>
+                <tr><th>NAR LoRA</th><td>未应用 (Stock)</td></tr>
+                <tr><th>NAR 耗时</th><td>18.46 s</td></tr>
+                <tr><th>VAE 耗时</th><td>1.15 s</td></tr>
+                <tr><th>总重建耗时</th><td>19.61 s</td></tr>
+                <tr><th>RTF</th><td><strong>0.560</strong></td></tr>
+            </table>
+            <audio controls src="Stock_NAR_32step.flac"></audio>
+        </div>
+
+        <div class="card">
+            <span class="badge badge-adapted">Adapted_NAR_32step</span>
+            <h3>Adapted_NAR_32step</h3>
+            <table>
+                <tr><th>求解步数</th><td>32 步</td></tr>
+                <tr><th>NAR LoRA</th><td>已加载 (scale=1.0)</td></tr>
+                <tr><th>NAR 耗时</th><td>25.70 s</td></tr>
+                <tr><th>VAE 耗时</th><td>1.43 s</td></tr>
+                <tr><th>总重建耗时</th><td>27.13 s</td></tr>
+                <tr><th>RTF</th><td><strong>0.775</strong></td></tr>
+            </table>
+            <audio controls src="Adapted_NAR_32step.flac"></audio>
+        </div>
+
+        <div class="card">
+            <span class="badge badge-fast">Adapted_NAR_8step</span>
+            <h3>Adapted_NAR_8step</h3>
+            <table>
+                <tr><th>求解步数</th><td>8 步</td></tr>
+                <tr><th>NAR LoRA</th><td>已加载 (scale=1.0)</td></tr>
+                <tr><th>NAR 耗时</th><td>6.74 s</td></tr>
+                <tr><th>VAE 耗时</th><td>1.47 s</td></tr>
+                <tr><th>总重建耗时</th><td>8.21 s</td></tr>
+                <tr><th>RTF</th><td><strong>0.234</strong></td></tr>
+            </table>
+            <audio controls src="Adapted_NAR_8step.flac"></audio>
+        </div>
+
+    </div>
+</body>
+</html>

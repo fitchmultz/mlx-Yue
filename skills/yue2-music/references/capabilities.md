@@ -30,12 +30,15 @@
 | 自定义 tiling/资源限制 | query_chunk_size / vae_core_frames / budget | 原生 full attention，guard 常开 |
 | FLAC/WAV 与产物/哈希 | SongResult.save/save_artifacts | summary 校验、保留 noise/latent/配置 |
 | 本地统一试听 / demo 基准 | listen / 项目 benchmark tools | listening-and-evaluation |
+| 真实音频语义 token 化 (RealAudio v4) | realaudio tokenize / RealAudioPipeline | 24kHz MERT L20 + 25Hz 插值 + 8层 Head 映射 32768 codes |
+| 真实音频语义重建与 NAR LoRA 适配 | realaudio reconstruct / RealAudioPipeline | rank-32 NAR LoRA + vae2llm/llm2vae 替换 + VAE 48kHz 解码 |
+| 真实音频 8/32 步与 LoRA 试听对比 | realaudio compare | 同 noise/token 评测 Stock vs Adapted 32/8步与 RTF / 内存 |
 
 MERT2 是底层模块，不是 from_pretrained 特征 CLI：按 transcription/model.py 的加载器
 加载转换权重，调用 MERT2(config)(waveform, layer_weights=None, cancelled=None)；
 转谱前端使用 24 kHz mono，遵守 checkpoint config。特征不是语义 codec IDs。
 可选 legacy VAE 需显式路径和独立产物，不能代替默认 VAE 来掩盖差异。
 
-不提供：训练/LoRA、流式实时音频、波形 inpainting、换声克隆、分轨/锁伴奏、硬指定
+支持 RealAudio v4 真实音频语义 Tokenizer 编码、NAR LoRA 与 artist AR LoRA 适配重建（大规模训练/微调需先产出权重后导入）。不提供：流式实时音频、波形 inpainting、换声克隆、分轨/锁伴奏、硬指定
 音频时长、音素/词级时间戳、MIDI 直接作为生成请求（先明确转为支持的 ABC）。
 不要把其他项目的同名参数移植进来。只改本技能和必要兼容缺陷，不擅自修改推理算法。

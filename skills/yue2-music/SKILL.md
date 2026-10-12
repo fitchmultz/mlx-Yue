@@ -1,6 +1,6 @@
 ---
 name: yue2-music
-description: Use YuE2 / mlx-Yue on Apple Silicon to generate music, optimize generation settings, transcribe audio to ABC/MIDI, cover songs, edit scores or lyrics, render saved plans, replay audio, batch variants, and compare 8/32-step audio and RTF. 用 YuE2 本机作曲、翻唱、改谱、换词、转谱、调参和试听对比。Do not route explicit ACE-Step/Suno jobs, waveform inpainting, voice cloning, or guaranteed exact melody replacement here.
+description: Use YuE2 / mlx-Yue on Apple Silicon to generate music, optimize generation settings, transcribe audio to ABC/MIDI, tokenize real audio (RealAudio v4), reconstruct audio via NAR LoRA, cover songs, edit scores or lyrics, render saved plans, replay audio, batch variants, and compare 8/32-step audio and RTF. 用 YuE2 本机作曲、翻唱、改谱、换词、转谱、真实音频语义token化与重建、调参和试听对比。Do not route explicit ACE-Step/Suno jobs, waveform inpainting, voice cloning, or guaranteed exact melody replacement here.
 ---
 
 # YuE2-music
@@ -14,10 +14,16 @@ Use local **mlx-Yue** to turn a musical brief into a reproducible song.
    For lyrics/prompt-only requests, return the draft without running generation.
 3. Choose a path: `full` generated/supplied ABC for melody + harmony; `melody`
    generated/supplied chord-free ABC for free accompaniment; `off` for direct audio.
-   Audio cover: transcribe, inspect ABC, then regenerate. `off` is not instrumental-only.
+   Audio cover: transcribe, inspect ABC, then regenerate. For instrumental covers and pure
+   instrumental generation, use `--instrumental` (or `scripts/instrumentalize.py` /
+   `scripts/instrumental.py`) to transfer vocal leads to `Ins`, fill `Vocal` with rests,
+   apply section-only lyrics and negative vocal prompts, and synthesize pure instrumental audio.
+   Real-audio tokenization & reconstruction: use RealAudio v4 (`scripts/realaudio_tool.py`
+   or `mlx-yue realaudio`) to encode real recordings into 25Hz semantic tokens and
+   reconstruct via NAR LoRA adapter and VAE.
 4. Use [generation and covers](references/generation-and-covers.md) and
-   `scripts/generate_music.py`. Default **standard = AR 8bit + 32 midpoint steps**;
-   quick audition **fast = AR 8bit + 8 steps**; BF16 baseline **reference**.
+   `scripts/generate_music.py`. Default **standard = AR bf16 + 32 midpoint steps**;
+   quick audition **fast = AR bf16 + 8 steps**; BF16 baseline **reference**.
    User settings override presets. Keep 9,000 semantic tokens for full songs.
 5. For edits, read [editing workflows](references/editing-workflows.md) and
    [ABC rules](references/abc-editing.md). Copy the score, check invariants, then submit

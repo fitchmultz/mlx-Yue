@@ -34,6 +34,10 @@ Featuring 15 complete songs evaluated across 6 languages and 5 generation modes.
   - Native SheetSage2 + MERT2 music transcription in MLX (Audio $\to$ ABC notation / MIDI / LAB).
   - Multi-window stitching supporting arbitrarily long source tracks.
   - End-to-end **Cover** pipeline: Transcribe source audio $\to$ extract melody/structure $\to$ re-synthesize with new styles.
+- 🎛️ **RealAudio Tokenizer v4 & NAR LoRA Reconstruction**:
+  - Native MLX MERT2 Layer-20 feature extraction + 8-layer Transformer Tokenizer Head (24kHz audio $\to$ 25Hz semantic codes).
+  - Memory-safe NAR LoRA injection & exact reversible restoration for real-audio re-synthesis without modifying base model weights.
+  - End-to-end command-line toolkit: `mlx-yue realaudio {tokenize, reconstruct, compare, convert}`.
 - 🚀 **Metal Performance Shaders (MPS / Steel) Optimization**:
   - Leverages MLX Steel SDPA with FP32 accumulator on Apple Silicon to maximize memory bandwidth and GPU compute utilization.
   - Same-input full acoustic synthesis accelerated from **363.09 s to 186.94 s** (1.94× speedup) with bit-identical latent representations.
@@ -97,29 +101,21 @@ numerical experiments and are not the recommended installation environment.
 
 #### Option A: Download Pre-converted Weights from Hugging Face (Recommended)
 
-Pre-converted weights are hosted at **[vanch007/mlx-Yue2-3B](https://huggingface.co/vanch007/mlx-Yue2-3B)**:
+Pre-converted weights (including both generator and 48kHz FP32 Oobleck VAE) are hosted at **[vanch007/mlx-Yue2-3B](https://huggingface.co/vanch007/mlx-Yue2-3B)**:
 
 ```bash
-# Download model weights to models/converted
+# Download complete model weights to models/mlx-Yue2-3B
 python -c '
 from huggingface_hub import snapshot_download
-snapshot_download(repo_id="vanch007/mlx-Yue2-3B", local_dir="models/converted")
+snapshot_download(repo_id="vanch007/mlx-Yue2-3B", local_dir="models/mlx-Yue2-3B")
 '
 ```
 
-The pre-converted repository contains:
+The pre-converted repository contains everything needed for inference:
 - `ar-bf16.safetensors` & `ar-8bit.safetensors` (Autoregressive models)
 - `nar-bf16.safetensors` (Acoustic Flow-Matching NAR model)
+- `vae/` (`model.safetensors`, `config.json` - 48kHz FP32 Oobleck VAE decoder)
 - `qwen.tiktoken` & model configs
-
-For the VAE decoder, download from [m-a-p/YuE2-Vae](https://huggingface.co/m-a-p/YuE2-Vae):
-```bash
-python -c '
-from huggingface_hub import snapshot_download
-snapshot_download(repo_id="m-a-p/YuE2-Vae", local_dir="models/vae")
-'
-export LYRA_VAE="$(pwd)/models/vae"
-```
 
 #### Option B: Automatic Conversion from Official Upstream
 
@@ -172,6 +168,23 @@ mlx-yue generate examples/full-song.json \
 Listen to the generated 48kHz lossless FLAC:
 ```bash
 open outputs/full-song/audio.flac
+```
+
+---
+
+### 4. RealAudio Tokenizer v4 (Audio $\to$ Semantic Codes & Re-synthesis)
+
+Encode any real audio recording into YuE2 25Hz semantic tokens, or reconstruct it with the paired NAR LoRA:
+
+```bash
+# Tokenize source audio into semantic tokens
+mlx-yue realaudio tokenize path/to/song.mp3 --output outputs/realaudio_tok
+
+# Tokenize and reconstruct audio via NAR LoRA adapter + VAE
+mlx-yue realaudio reconstruct path/to/song.mp3 --output outputs/realaudio_rec --steps 8
+
+# Run 3-way listening comparison (Stock vs Adapted 32-step vs Adapted 8-step)
+mlx-yue realaudio compare path/to/song.mp3 --output outputs/realaudio_cmp
 ```
 
 #### C. Music Transcription (Audio to Sheet / MIDI)

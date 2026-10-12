@@ -64,7 +64,9 @@ class BartDecoder(nn.Module):
         offset = 0 if cache is None else cache[0][0][0].shape[2]
         positions = mx.arange(offset, offset + embedded.shape[1])
         x = self.layernorm_embedding(embedded + self.embed_positions(positions + 2))
-        mask = mx.arange(offset + embedded.shape[1])[None, :] <= positions[:, None]
+        mask = None if (cache is not None and embedded.shape[1] == 1) else (
+            mx.arange(offset + embedded.shape[1])[None, :] <= positions[:, None]
+        )
         updated = []
         for i, layer in enumerate(self.layers):
             x, state = layer(x, memory, None if cache is None else cache[i], mask)

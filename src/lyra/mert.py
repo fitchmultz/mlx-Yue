@@ -151,10 +151,12 @@ class MERT2(nn.Module):
                                    for i in range(3)]
         self.layers = [ConformerBlock(config) for _ in range(config["num_hidden_layers"])]
 
-    def __call__(self, waveform, layer_weights=None, cancelled=None):
+    def __call__(self, waveform, layer_weights=None, cancelled=None, target_layer=None):
         if cancelled is not None and cancelled():
             raise InterruptedError("Cancelled before MERT2 encoding")
         x = apply_layers(self.subsampling_module, self.feature_extractor(waveform))
+        if target_layer == 0:
+            return x
         mixed = None if layer_weights is None else x * layer_weights[0]
         for i, layer in enumerate(self.layers):
             if cancelled is not None and cancelled():
@@ -162,6 +164,8 @@ class MERT2(nn.Module):
             x = layer(x)
             if mixed is not None:
                 mixed = mixed + x * layer_weights[i + 1]
+            if target_layer is not None and (i + 1) == target_layer:
+                return x
             mx.eval(x, mixed)
         return x if mixed is None else mixed
 

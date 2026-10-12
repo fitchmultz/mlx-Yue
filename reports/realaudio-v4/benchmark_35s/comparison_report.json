@@ -1,0 +1,54 @@
+{
+  "input_audio": "reports/realaudio-v4/samples/sample_35s.flac",
+  "tokenization": {
+    "source_samples": 840000,
+    "source_seconds": 35.0,
+    "target_25hz_frames": 875,
+    "token_count": 875,
+    "unique_tokens": 625,
+    "read_seconds": 0.03033733303891495,
+    "encode_seconds": 0.2929406249895692,
+    "audio_file": "reports/realaudio-v4/samples/sample_35s.flac"
+  },
+  "runs": [
+    {
+      "tokens_count": 875,
+      "audio_seconds": 34.998666666666665,
+      "steps": 32,
+      "nar_scale": 0.0,
+      "nar_time_seconds": 18.457917125022504,
+      "vae_time_seconds": 1.154472165973857,
+      "total_reconstruction_seconds": 19.612461625016294,
+      "rtf": 0.5603773941392899,
+      "sample_rate": 48000,
+      "audio_file": "Stock_NAR_32step.flac",
+      "name": "Stock_NAR_32step"
+    },
+    {
+      "tokens_count": 875,
+      "audio_seconds": 34.998666666666665,
+      "steps": 32,
+      "nar_scale": 1.0,
+      "nar_time_seconds": 25.698307165992446,
+      "vae_time_seconds": 1.431864999991376,
+      "total_reconstruction_seconds": 27.13027908297954,
+      "rtf": 0.7751803616227154,
+      "sample_rate": 48000,
+      "audio_file": "Adapted_NAR_32step.flac",
+      "name": "Adapted_NAR_32step"
+    },
+    {
+      "tokens_count": 875,
+      "audio_seconds": 34.998666666666665,
+      "steps": 8,
+      "nar_scale": 1.0,
+      "nar_time_seconds": 6.740690374979749,
+      "vae_time_seconds": 1.4659431250183843,
+      "total_reconstruction_seconds": 8.206720000016503,
+      "rtf": 0.23448664711083766,
+      "sample_rate": 48000,
+      "audio_file": "Adapted_NAR_8step.flac",
+      "name": "Adapted_NAR_8step"
+    }
+  ]
+}

@@ -13,7 +13,7 @@ cd /Users/vanch/yue2-mlx
 PY="$PWD/.runtime/bin/python"
 SKILL="$PWD/skills/yue2-music"
 "$PY" -m lyra.cli --help
-"$PY" -m lyra.cli doctor --model models/converted
+"$PY" -m lyra.cli doctor
 ```
 
 本机优先 `.runtime/bin/python`（独立 Torch-free）；否则使用项目已安装环境

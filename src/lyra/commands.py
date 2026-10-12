@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import importlib.metadata
 import json
+from pathlib import Path
 import platform
 import sys
 
@@ -36,14 +37,39 @@ def doctor(args):
     for kind in ("model", "vae"):
         path = getattr(args, kind)
         if path is None:
+            paths_file = Path("models/paths.json")
+            if paths_file.is_file():
+                try:
+                    data = json.loads(paths_file.read_text())
+                    if kind in data and data[kind]:
+                        p = Path(data[kind])
+                        if p.exists():
+                            path = p
+                except Exception:
+                    pass
+        if path is None:
+            if kind == "model":
+                for candidate in ("models/mlx-Yue2-3B", "models/converted"):
+                    p = Path(candidate)
+                    if (p / "conversion.json").is_file():
+                        path = p
+                        break
+            elif kind == "vae":
+                for candidate in ("models/YuE2-Vae", "models/vae"):
+                    p = Path(candidate)
+                    if (p / "config.json").is_file():
+                        path = p
+                        break
+        if path is None:
             continue
         try:
+            verify_hashes = getattr(args, "verify_hashes", False)
             if kind == "model":
-                data = verify_conversion(path) if args.verify_hashes else json.loads((path / "conversion.json").read_text())
+                data = verify_conversion(path) if verify_hashes else json.loads((path / "conversion.json").read_text())
             else:
-                data = model_identity(path) if args.verify_hashes else json.loads((path / "config.json").read_text())
+                data = model_identity(path) if verify_hashes else json.loads((path / "config.json").read_text())
             checks[kind] = True
-            report[kind] = {"path": str(path.resolve()), "identity_checked": args.verify_hashes,
+            report[kind] = {"path": str(path.resolve()), "identity_checked": verify_hashes,
                             "metadata": data}
         except (OSError, ValueError) as error:
             checks[kind] = False
@@ -146,7 +172,20 @@ def cover(args):
         mx.clear_cache()
         if transcription["status"] != "complete" or transcription["truncated"]:
             raise ValueError("Transcription is incomplete; inspect its artifacts before using the score")
-        request["abc"] = (args.output / "transcription" / "score.abc").read_bytes().decode("utf-8")
+        raw_abc = (args.output / "transcription" / "score.abc").read_bytes().decode("utf-8")
+        is_instrumental = bool(getattr(args, "instrumental", False) or request.get("instrumental", False))
+        if is_instrumental:
+            from .music_tools.instrumentalize import convert_score
+            from .music_tools.instrumental import lyric_tags
+            converted_abc, transfer_report = convert_score(raw_abc, overlap="vocal", keep_chords=True)
+            request["abc"] = converted_abc
+            (args.output / "transcription" / "score_instrumental.abc").write_text(converted_abc, encoding="utf-8")
+            write_json(args.output / "transcription" / "transfer.json", transfer_report)
+            if not request.get("lyrics"):
+                request["lyrics"] = lyric_tags(converted_abc)
+            request["instrumental"] = True
+        else:
+            request["abc"] = raw_abc
         write_json(args.output / "request.json", request)
         with _pipeline(args, generation) as pipe:
             result = pipe(**request)
@@ -155,5 +194,6 @@ def cover(args):
         "source_audio_sha256": transcription["source_audio_sha256"],
         "transcription": "transcription/result.json", "song": "song/result.json",
         "backend": "mlx", "truncated": result.truncated,
+        "instrumental": is_instrumental,
     })
     return int(any(result.truncated.values()))

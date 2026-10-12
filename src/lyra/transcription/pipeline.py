@@ -63,7 +63,9 @@ def generate_tokens(model, tokenizer, waveform, prompts, prefix=None, stop_time=
         check_cancelled(cancelled)
         logits, cache = model.decode(memory, ids, cache)
         allowed = mx.array(state.allowed(None))
-        token = int(mx.argmax(mx.where(allowed, logits[0, -1], -mx.inf)).item())
+        best = mx.argmax(mx.where(allowed, logits[0, -1], -mx.inf))
+        mx.eval(best, cache)
+        token = int(best.item())
         tokens.append(token)
         ended = state.update(token)
         if not ended and stop_time is not None and tokenizer.time_token_start <= token < tokenizer.time_token_end:
@@ -75,7 +77,6 @@ def generate_tokens(model, tokenizer, waveform, prompts, prefix=None, stop_time=
         ids = [token]
         if progress is not None and len(tokens) % 100 == 0:
             progress({"stage": "decoding", "tokens": len(tokens)})
-        mx.eval(cache)
     truncated = not ended
     if tokens[-1] != tokenizer.eos_token:
         tokens.append(tokenizer.eos_token)

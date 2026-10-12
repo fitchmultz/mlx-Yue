@@ -12,7 +12,7 @@ import subprocess
 import sys
 import time
 
-PROFILES = {"fast": (8, "8bit"), "standard": (32, "8bit"), "reference": (32, "bf16")}
+PROFILES = {"fast": (8, "bf16"), "standard": (32, "bf16"), "reference": (32, "bf16")}
 
 
 def read(path):
@@ -70,7 +70,7 @@ def configure(data, request_path, profile="standard", preview_seconds=None, acti
     gc = GenerationConfig.from_dict(config)
     resolve_sampling(data.get("abc_sampling"), gc.abc)
     resolve_sampling(data.get("semantic_sampling"), gc.semantic)
-    fields = {k: v for k, v in data.items() if k not in {"generation_config", "abc_sampling", "semantic_sampling"}}
+    fields = {k: v for k, v in data.items() if k not in {"generation_config", "abc_sampling", "semantic_sampling", "instrumental"}}
     req = SongRequest(**fields)  # Reject unsupported ACE-Step fields and invalid counts.
     if req.abc:
         from lyra.music_tools.abc_tools import parse_abc
@@ -85,8 +85,12 @@ def model_paths(root, model=None, vae=None):
     def resolve(value):
         path = Path(value).expanduser()
         return (root / path).resolve() if not path.is_absolute() else path.resolve()
-    model = resolve(model or paths.get("model", "models/converted"))
-    vae = resolve(vae or paths.get("vae", "models/vae"))
+    model = resolve(model or paths.get("model", "models/mlx-Yue2-3B"))
+    vae = resolve(vae or paths.get("vae", "models/YuE2-Vae"))
+    if not (model / "conversion.json").is_file() and (root / "models/converted/conversion.json").is_file():
+        model = (root / "models/converted").resolve()
+    if not (vae / "config.json").is_file() and (root / "models/vae/config.json").is_file():
+        vae = (root / "models/vae").resolve()
     if not (model / "conversion.json").is_file() or not (vae / "config.json").is_file():
         raise ValueError("Local converted generator/VAE missing; see references/models-and-setup.md")
     return model, vae

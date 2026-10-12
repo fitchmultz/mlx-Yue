@@ -179,12 +179,35 @@ class YuE2Pipeline(ReferencePipeline):
 
     @classmethod
     def from_pretrained(
-        cls, model=MODEL_REPO, *, vae=VAE_REPO, converted_dir="models/converted",
+        cls, model=MODEL_REPO, *, vae=VAE_REPO, converted_dir="models/mlx-Yue2-3B",
         revision=MODEL_REVISION, vae_revision=None,
         cache_dir=None, local_files_only=False, precision="bf16", progress=True,
         **kwargs,
     ):
         start = time.perf_counter()
+        if str(model) == MODEL_REPO or str(vae) == VAE_REPO:
+            paths_file = Path("models/paths.json")
+            if paths_file.is_file():
+                try:
+                    local_paths = json.loads(paths_file.read_text())
+                    if str(model) == MODEL_REPO and "model" in local_paths and Path(local_paths["model"]).is_dir():
+                        model = Path(local_paths["model"])
+                    if str(vae) == VAE_REPO and "vae" in local_paths and Path(local_paths["vae"]).is_dir():
+                        vae = Path(local_paths["vae"])
+                except Exception:
+                    pass
+            if str(model) == MODEL_REPO:
+                for candidate in ("models/mlx-Yue2-3B", "models/converted"):
+                    p = Path(candidate)
+                    if (p / "conversion.json").is_file():
+                        model = p
+                        break
+            if str(vae) == VAE_REPO:
+                for candidate in ("models/YuE2-Vae", "models/vae"):
+                    p = Path(candidate)
+                    if (p / "config.json").is_file():
+                        vae = p
+                        break
         if str(vae) == VAE_REPO and vae_revision is None:
             vae_revision = VAE_REVISION
         model = Path(model).expanduser() if Path(model).expanduser().is_dir() else model
@@ -237,9 +260,14 @@ class YuE2Pipeline(ReferencePipeline):
 
         return guarded
 
+    def _request(self, style, lyrics, *, tags=None, **kwargs):
+        kwargs.pop("instrumental", None)
+        return super()._request(style, lyrics, tags=tags, **kwargs)
+
     def plan(self, style=None, lyrics=None, *, tags=None, request=None, abc_sampling=None,
              cancelled=None, on_token=None, **kwargs):
         self._check_execution()
+        kwargs.pop("instrumental", None)
         result = super().plan(
             style, lyrics, tags=tags, request=request, abc_sampling=abc_sampling,
             cancelled=cancelled, on_token=on_token, **kwargs,

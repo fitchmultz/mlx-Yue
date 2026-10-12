@@ -1,8 +1,8 @@
 {
   "name": "yue2-music",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "owner": "vanch (project owner; inferred from request)",
-  "updated_at": "2026-09-14",
+  "updated_at": "2026-09-15",
   "status": "experimental",
   "maturity_tier": "scaffold",
   "skill_archetype": "personal local music workflow",
@@ -19,5 +19,6 @@
     "assets",
     "evals",
     "reports"
-  ]
+  ],
+  "description": "Added native RealAudio Tokenizer v4 and NAR LoRA reconstruction support"
 }
