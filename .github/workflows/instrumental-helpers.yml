@@ -1,0 +1,27 @@
+name: Instrumental helpers
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  symbolic-and-wheel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - name: Test symbolic conversion and isolated wheel installation
+        env:
+          PYTHONPATH: ${{ github.workspace }}/src
+        run: uv run --no-project --with pytest==9.0.3 pytest -q tests/test_instrumental.py tests/test_instrumental_wheel.py
+      - name: Lint restored helpers and regressions
+        run: >-
+          uv run --no-project --with ruff==0.15.7 ruff check
+          src/lyra/music_tools/compile_score.py
+          src/lyra/music_tools/instrumentalize.py
+          src/lyra/music_tools/instrumental.py
+          tests/test_instrumental.py
+          tests/test_instrumental_wheel.py

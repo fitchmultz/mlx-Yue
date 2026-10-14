@@ -102,3 +102,34 @@ query_chunk_size、vae_core_frames、memory_budget_gib、resource_path、require
 接口详细见项目 docs/usage.md 及源文件，不自创参数。
 `save_pretrained` 导出离线 generator/VAE；`SongResult.save` 支持 FLAC/WAV，
 `save_artifacts` 包含 PCM-24 FLAC、tokens、noise、latent、request/config/result。
+
+## Instrumental helper entry points
+
+The `instrumentalize.py`, `compile_score.py` and `instrumental.py` wrappers
+use the installed `lyra.music_tools` implementations. They also work via
+`python -m lyra.music_tools.<module>`.
+
+```bash
+python -m lyra.music_tools.instrumentalize score.abc --output work/transfer
+python -m lyra.music_tools.instrumental cover --abc score.abc --keep-harmony \
+  --style "Warm piano" --prepare-only --output work/prepared-cover
+python -m lyra.music_tools.instrumental verify work/prepared-cover/prepared
+```
+
+Drop `--prepare-only` to render with native MLX. Use `--model`, `--vae`,
+`--precision`, `--offline` and `--memory-budget-gib` as with the native CLI.
+Audio covers use native MLX SheetSage2, not a separate CUDA interpreter.
+Run each module with `--help` for its full command/options list.
+
+Conversion preserves every vocal pitch, onset and duration, tempo, meter and
+active harmony (unless explicitly dropped). `Vocal` becomes rests and `Ins`
+carries the lead. The default `--overlap vocal` clips overlapping original
+`Ins` notes in favor of the transferred vocal melody and records retained
+segments in `transfer.json`; `--overlap error` instead rejects such a score.
+Nonoverlapping instrumental notes and silence remain on the same time grid.
+
+The supported input is the native monophonic two-voice, power-of-two ABC
+dialect, not arbitrary ABC/polyphonic music. Unsupported notation and mid-bar
+key changes fail rather than silently quantizing or rewriting the music.
+Symbolic preservation does not guarantee audio adherence or absence of vocals;
+those still require listening.
