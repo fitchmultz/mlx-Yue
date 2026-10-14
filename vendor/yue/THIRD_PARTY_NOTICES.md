@@ -1,5 +1,16 @@
 # Third-party code notices
 
+The `lyra.music_tools.compile_score`, `instrumentalize` and `instrumental`
+helpers are adapted from the official YuE repository's instrumental skill at
+commit `1647252d68b70cbead046ffd3f7caf036dde47ee`:
+https://github.com/multimodal-art-projection/YuE/tree/1647252d68b70cbead046ffd3f7caf036dde47ee/skills/yue2-music/instrumental/scripts
+
+- Copyright (c) 2026 yue2-music contributors, MIT.
+  Full text: `licenses/yue2-instrumental-MIT.txt`.
+- Adaptations use package-relative imports and the native MLX generation and
+  transcription APIs; the symbolic event compiler and voice-transfer policy
+  retain the original exact-fraction invariants.
+
 The Oobleck VAE and SnakeBeta implementation in `modeling_vae.py` is derived
 from stable-audio-tools commit `a6ae0cdf8b2eb1567a4b42ceadddec3712d99d45`.
 The module hierarchy, weight normalization and activation equations preserve

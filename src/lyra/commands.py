@@ -153,7 +153,8 @@ def cover(args):
     request["cot"] = mode
     generation = GenerationConfig.from_dict(request.pop("generation_config", {}))
     # Validate text, seed and mode before spending time on transcription.
-    SongRequest(**{k: v for k, v in request.items() if k not in {"abc_sampling", "semantic_sampling"}})
+    SongRequest(**{k: v for k, v in request.items()
+                   if k not in {"abc_sampling", "semantic_sampling", "instrumental"}})
     if args.output.exists() and any(args.output.iterdir()):
         raise FileExistsError("Cover requires a fresh output directory")
     with _resource_monitor(args):
